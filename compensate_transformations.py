@@ -33,18 +33,18 @@ def matrix_is_default(matrix: OpenMaya.MMatrix):
     if matrix == default_matrix:
         return True
 
-def inverse_object_matrix(object_matrix: OpenMaya.MMatrix, dummy_matrix: OpenMaya.MMatrix):
+def inverse_object_matrix(object_matrix: OpenMaya.MMatrix, pivot_matrix: OpenMaya.MMatrix):
     """
-    Computes the transformation of an object relative to the inverse of a dummy matrix.
+    Computes the transformation of an object relative to the inverse of a pivot matrix.
 
     Args:
         object_matrix (OpenMaya.MMatrix): The transformation matrix of the object.
-        dummy_matrix (OpenMaya.MMatrix): The transformation matrix of the dummy object.
+        pivot_matrix (OpenMaya.MMatrix): The transformation matrix of the pivot object.
 
     Returns:
         OpenMaya.MTransformationMatrix: The transformed object matrix.
     """
-    inverse_matrix = dummy_matrix.inverse()
+    inverse_matrix = pivot_matrix.inverse()
     object_matrix = object_matrix * inverse_matrix
     object_matrix = OpenMaya.MTransformationMatrix(object_matrix)
     return object_matrix
@@ -65,24 +65,24 @@ def set_object_matrix(object_path: OpenMaya.MDagPath, object_matrix: OpenMaya.MT
     return final_matrix.transformation().asMatrix()
 
 
-def overcompensate(object_name: str, dummy_name: str):
+def overcompensate(object_name: str, pivot_name: str):
     """
-    Adjusts the transformation of an object to counteract the transformation of a dummy object.
+    Adjusts the transformation of an object to counteract the transformation of a pivot object.
 
     Args:
         object_name (str): The name of the object to adjust.
-        dummy_name (str): The name of the dummy object used for transformation reference.
+        pivot_name (str): The name of the pivot object used for transformation reference.
 
     Returns:
-        int: Returns 0 if the dummy object is at the default position or if the object is not frozen.
+        int: Returns 0 if the pivot object is at the default position or if the object is not frozen.
     """
     object_path, object_matrix = get_matrix(object_name)
-    dummy_path, dummy_matrix = get_matrix(dummy_name)
-    if matrix_is_default(dummy_matrix):
-        OpenMaya.MGlobal.displayError("Dummy is at default position")
+    pivot_path, pivot_matrix = get_matrix(pivot_name)
+    if matrix_is_default(pivot_matrix):
+        OpenMaya.MGlobal.displayError("pivot is at default position")
         return 0
     if not matrix_is_default(object_matrix):
         OpenMaya.MGlobal.displayError("Please freeze transforms")
         return 0
-    object_matrix = inverse_object_matrix(object_matrix=object_matrix, dummy_matrix=dummy_matrix)
+    object_matrix = inverse_object_matrix(object_matrix=object_matrix, pivot_matrix=pivot_matrix)
     set_object_matrix(object_path=object_path,object_matrix=object_matrix)
